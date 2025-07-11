@@ -143,7 +143,6 @@ class Dataset():
                     feature = self.getFeature(val)
                     if feature:
                         logging.debug('Successful resolved %s' % val)
-                        # value['@xlink:href'] = feature
                         value['@xlink:href [resolved]'] = feature
                     else:
                         logging.debug('Unable to resolve %s' % val)
