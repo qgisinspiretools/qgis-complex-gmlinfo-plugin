@@ -20,9 +20,9 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, QTimer
-from PyQt5.QtWidgets import QAction, QMessageBox, QTreeWidgetItem
-from PyQt5.QtGui import QIcon, QColor
+from qgis.PyQt.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, QTimer
+from qgis.PyQt.QtWidgets import QAction, QMessageBox, QTreeWidgetItem
+from qgis.PyQt.QtGui import QIcon, QColor
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog

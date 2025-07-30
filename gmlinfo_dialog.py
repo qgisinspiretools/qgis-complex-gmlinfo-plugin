@@ -23,8 +23,8 @@
 
 import os
 
-from PyQt5 import uic
-from PyQt5.QtWidgets import *
+from qgis.PyQt import uic
+from qgis.PyQt.QtWidgets import *
 from .gmlinfo_dialog_base import Ui_ComplexGmlInfoDialogBase
 
 class ComplexGmlInfoDialog(QDialog, Ui_ComplexGmlInfoDialogBase):

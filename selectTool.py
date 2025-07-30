@@ -1,4 +1,4 @@
-from PyQt5.QtGui import QIcon, QColor
+from qgis.PyQt.QtGui import QIcon, QColor
 
 from qgis.core import *
 from qgis.gui import *
@@ -9,7 +9,7 @@ class SelectTool(QgsMapTool):
         self.iface = iface
         self.canvas = iface.mapCanvas()
         self.callback = callback
-        self.rubberBand = QgsRubberBand(self.canvas, True)
+        self.rubberBand = QgsRubberBand(self.canvas)
         self.rubberBand.setColor(QColor(255, 0, 0, 255))
         self.rubberBand.setFillColor(QColor(255, 0, 0, 0))
         self.rubberBand.setWidth(1)
