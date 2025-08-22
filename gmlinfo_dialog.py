@@ -25,15 +25,18 @@ import os
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import *
-from .gmlinfo_dialog_base import Ui_ComplexGmlInfoDialogBase
+from qgis.PyQt import QtWidgets, uic
 
-class ComplexGmlInfoDialog(QDialog, Ui_ComplexGmlInfoDialogBase):
+
+UI_PATH = os.path.join(os.path.dirname(__file__), 'gmlinfo_dialog_base.ui')
+
+class ComplexGmlInfoDialog(QDialog):
     def __init__(self, parent=None):
         """Constructor."""
-        super(ComplexGmlInfoDialog, self).__init__(parent)
+        super().__init__(parent)
         # Set up the user interface from Designer.
         # After setupUI you can access any designer object by doing
         # self.<objectname>, and you can use autoconnect slots - see
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
-        self.setupUi(self)
+        uic.loadUi(UI_PATH, self)
