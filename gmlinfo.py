@@ -20,19 +20,19 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, QTimer, QDir
+import os
+import logging
+from collections import OrderedDict
+
+from qgis.PyQt.QtCore import (
+    QSettings, QTranslator, qVersion, QCoreApplication, QTimer
+)
 from qgis.PyQt.QtWidgets import QAction, QMessageBox, QTreeWidgetItem
 from qgis.PyQt.QtGui import QIcon, QColor
-# Initialize Qt resources from file resources.py
+
 # Import the code for the dialog
 from .gmlinfo_dialog import ComplexGmlInfoDialog
-import os
-import os.path
-
 from .pygml import pygml, util
-from collections import OrderedDict
-import logging
-
 from .selectTool import SelectTool
 
 
@@ -50,30 +50,16 @@ class ComplexGmlInfo:
         # Save reference to the QGIS interface
         self.iface = iface
         # initialize plugin directory
-        self.plugin_dir = os.path.dirname(__file__)
-        # Register icon search paths robustly
-        self.icons_dir = None
-
-        try:
-            # Normalize + trailing slash for Qt
-            norm = os.path.abspath(self.plugin_dir)
-            if os.path.isdir(norm):
-                self.icons_dir = norm
-                QtCore.QDir.addSearchPath("plugins", self.icons_dir + os.sep)
-                logging.error(f"[ComplexGmlInfo] Registered icon search path: {self.icons_dir}")
-
-        except Exception as e:
-            logging.error(f"[ComplexGmlInfo] Error probing icon dir {self.plugin_dir}: {e}")
-
-        if not self.icons_dir:
-            logging.error("[ComplexGmlInfo] No valid icon directory found! Checked: " + " | ".join(candidates))
+        self.plugin_dir = os.path.dirname(os.path.abspath(__file__))
+        self.icon_path = os.path.join(self.plugin_dir, "icon.png")
 
         # initialize locale
         locale = str(QSettings().value('locale/userLocale'))[0:2]
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
-            'ComplexGmlInfo_{}.qm'.format(locale))
+            f'ComplexGmlInfo_{locale}.qm'
+        )
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -88,7 +74,6 @@ class ComplexGmlInfo:
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Complex GML Info')
-        # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'ComplexGmlInfo')
         self.toolbar.setObjectName(u'ComplexGmlInfo')
 
@@ -100,70 +85,34 @@ class ComplexGmlInfo:
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
-        """Get the translation for a string using Qt translation API.
-
-        We implement this ourselves since we do not inherit QObject.
-
-        :param message: String for translation.
-        :type message: str, QString
-
-        :returns: Translated version of message.
-        :rtype: QString
-        """
-        # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
+        """Get the translation for a string using Qt translation API."""
         return QCoreApplication.translate('ComplexGmlInfo', message)
 
     def get_icon(self, name="icon.png"):
         """
-        Loads an icon with fallbacks and debug logging.
+        Loads an icon robustly.
         Sequence:
-          1) Alias: QIcon("plugins:name")
-          2) Absolute path: <self.icons_dir>/name
-          3) Legacy resource: ":/plugins/ComplexGmlInfo/name"
+          1) Absolute path: <plugin_dir>/name
+          2) Legacy resource: :/plugins/ComplexGmlInfo/name
         """
-        # 1) Alias
-        ico = QIcon(f"plugins:{name}")
-        if not ico.isNull():
-            return ico
+        fs_path = os.path.join(self.plugin_dir, name)
+        if os.path.exists(fs_path):
+            ico = QIcon(fs_path)
+            if not ico.isNull():
+                return ico
 
-        # 2) Absolute path
-        if self.icons_dir:
-            fs_path = os.path.join(self.icons_dir, name)
-            if os.path.exists(fs_path):
-                ico2 = QIcon(fs_path)
-                if not ico2.isNull():
-                    logging.error(f"[ComplexGmlInfo] Loaded icon via FS path: {fs_path}")
-                    return ico2
-                else:
-                    logging.error(f"[ComplexGmlInfo] Icon unreadable (FS): {fs_path}")
-            else:
-                logging.error(f"[ComplexGmlInfo] Icon not found (FS): {fs_path}")
-        else:
-            logging.error("[ComplexGmlInfo] self.icons_dir is None")
-
-        # 3) Legacy (if resources still exist)
         legacy = f":/plugins/ComplexGmlInfo/{name}"
-        ico3 = QIcon(legacy)
-        if not ico3.isNull():
-            logging.error(f"[ComplexGmlInfo] Loaded icon via legacy resource: {legacy}")
-            return ico3
+        ico2 = QIcon(legacy)
+        if not ico2.isNull():
+            return ico2
 
-        # Show diagnosis
-        try:
-            paths = QtCore.QDir.searchPaths("plugins")
-        except Exception:
-            paths = []
         QMessageBox.warning(
             self.iface.mainWindow(),
             "ComplexGmlInfo – Icon missing",
-            "Could not load icon:\n"
-            f"  Name: {name}\n"
-            f"  searchPaths('plugins'): {paths}\n"
-            f"  icons_dir: {self.icons_dir or 'None'}\n"
-            f"  Legacy: {legacy}\n\n"
-            "Please check: Folder/filename exists?"
+            f"Could not load icon:\n  {fs_path}\n(Legacy tried: {legacy})"
         )
-        logging.error(f"[ComplexGmlInfo] FAILED to load icon '{name}'. SearchPaths={paths} icons_dir={self.icons_dir}")
+        logging.error(f"[ComplexGmlInfo] FAILED to load icon '{name}'. "
+                      f"plugin_dir={self.plugin_dir}")
         return QIcon()
 
     def add_action(
