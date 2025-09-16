@@ -357,22 +357,27 @@ class ComplexGmlInfo:
             self.removeChildren(root_item, query)
 
     def removeChildren(self, item, query):
-        if item:
-            child_count = item.childCount()
-            if child_count > 0:
-                for i in range(child_count):
-                    self.removeChildren(item.child(i), query)
+        if not item:
+            return
+        # process children first (post-order), iterate backwards to avoid index shift
+        for i in range(item.childCount() - 1, -1, -1):
+            self.removeChildren(item.child(i), query)
 
-            else:
-                path = self.buildPath(item)
-                if not query.lower() in self.buildPath(item).lower():
-                    parent = item.parent()
-                    if parent:
-                        parent.removeChild(item)
-                        self.removeChildren(parent, query)
+        # if leaf, check query and remove if it doesn't match
+        if item.childCount() == 0:
+            path = self.buildPath(item)
+            if query.lower() not in path.lower():
+                parent = item.parent()
+                if parent:
+                    parent.removeChild(item)
 
     def buildPath(self, item):
-        text = item.text(0)
-        if item.parent():
-            text += ' > ' + self.buildPath(item.parent())
-        return text
+        # Iterative version to avoid maximum recursion depth with deep trees
+        parts = []
+        cur = item
+        # climb up to root, collecting labels
+        while cur is not None:
+            parts.append(cur.text(0))
+            cur = cur.parent()
+        # original order was leaf -> ... -> root (no reverse)
+        return ' > '.join(parts)
