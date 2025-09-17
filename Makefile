@@ -242,3 +242,34 @@ pep8:
 	@echo "-----------"
 	@echo "Ignored in PEP8 check:"
 	@echo $(PEP8EXCLUDE)
+
+# Build docs and deploy plugin using pb_tool
+pb_deploy:
+	@echo "------------------------------------"
+	@echo "Building Sphinx HTML help..."
+	@echo "------------------------------------"
+	@cd help && $(MAKE) html
+	@echo
+	@echo "------------------------------------"
+	@echo "Deploying plugin with pb_tool..."
+	@echo "------------------------------------"
+	pb_tool deploy
+
+# Build docs and create distributable ZIP
+pb_zip:
+	@echo "------------------------------------"
+	@echo "Building Sphinx HTML help..."
+	@echo "------------------------------------"
+	@cd help && $(MAKE) html
+	@echo
+	@echo "------------------------------------"
+	@echo "Creating plugin ZIP with pb_tool..."
+	@echo "------------------------------------"
+	pb_tool zip
+
+# Remove deployed plugin from user profile
+pb_clean:
+	@echo "------------------------------------"
+	@echo "Removing deployed plugin..."
+	@echo "------------------------------------"
+	pb_tool clean
